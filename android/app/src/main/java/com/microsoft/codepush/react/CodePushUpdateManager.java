@@ -116,16 +116,16 @@ public class CodePushUpdateManager {
         if (packageHash == null) {
             return null;
         }
-        
+
         return getPackage(packageHash);
     }
-    
+
     public JSONObject getPreviousPackage() {
         String packageHash = getPreviousPackageHash();
         if (packageHash == null) {
             return null;
         }
-        
+
         return getPackage(packageHash);
     }
 

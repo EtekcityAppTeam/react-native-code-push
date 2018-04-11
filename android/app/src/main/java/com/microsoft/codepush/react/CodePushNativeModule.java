@@ -11,7 +11,6 @@ import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.JSBundleLoader;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -19,6 +18,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.cxxbridge.JSBundleLoader;
 import com.facebook.react.modules.core.ChoreographerCompat;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
@@ -102,7 +102,7 @@ public class CodePushNativeModule extends ReactContextBaseJavaModule {
         try {
             JSBundleLoader latestJSBundleLoader;
             if (latestJSBundleFile.toLowerCase().startsWith("assets://")) {
-                latestJSBundleLoader = JSBundleLoader.createAssetLoader(getReactApplicationContext(), latestJSBundleFile, false);
+                latestJSBundleLoader = JSBundleLoader.createAssetLoader(getReactApplicationContext(), latestJSBundleFile);
             } else {
                 latestJSBundleLoader = JSBundleLoader.createFileLoader(latestJSBundleFile);
             }
@@ -412,11 +412,11 @@ public class CodePushNativeModule extends ReactContextBaseJavaModule {
                 }
 
                 if (installMode == CodePushInstallMode.ON_NEXT_RESUME.getValue() ||
-                    // We also add the resume listener if the installMode is IMMEDIATE, because
-                    // if the current activity is backgrounded, we want to reload the bundle when
-                    // it comes back into the foreground.
-                    installMode == CodePushInstallMode.IMMEDIATE.getValue() ||
-                    installMode == CodePushInstallMode.ON_NEXT_SUSPEND.getValue()) {
+                        // We also add the resume listener if the installMode is IMMEDIATE, because
+                        // if the current activity is backgrounded, we want to reload the bundle when
+                        // it comes back into the foreground.
+                        installMode == CodePushInstallMode.IMMEDIATE.getValue() ||
+                        installMode == CodePushInstallMode.ON_NEXT_SUSPEND.getValue()) {
 
                     // Store the minimum duration on the native module as an instance
                     // variable instead of relying on a closure below, so that any

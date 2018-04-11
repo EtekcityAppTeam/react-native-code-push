@@ -3,6 +3,8 @@ package com.microsoft.codepush.react;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.support.annotation.NonNull;
 
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactPackage;
@@ -15,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.NotActiveException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,16 +39,22 @@ public class CodePush implements ReactPackage {
 
     // Config properties.
     private String mDeploymentKey;
-    private String mServerUrl = "https://codepush.azurewebsites.net/";
+    private static String mServerUrl = "https://codepush.azurewebsites.net/";
 
     private Context mContext;
     private final boolean mIsDebugMode;
+
+    private static String mPublicKey;
 
     private static ReactInstanceHolder mReactInstanceHolder;
     private static CodePush mCurrentInstance;
 
     public CodePush(String deploymentKey, Context context) {
         this(deploymentKey, context, false);
+    }
+
+    public static String getServiceUrl() {
+        return mServerUrl;
     }
 
     public CodePush(String deploymentKey, Context context, boolean isDebugMode) {
@@ -72,9 +81,43 @@ public class CodePush implements ReactPackage {
         initializeUpdateAfterRestart();
     }
 
-    public CodePush(String deploymentKey, Context context, boolean isDebugMode, String serverUrl) {
+    public CodePush(String deploymentKey, Context context, boolean isDebugMode, @NonNull String serverUrl) {
         this(deploymentKey, context, isDebugMode);
         mServerUrl = serverUrl;
+    }
+
+    public CodePush(String deploymentKey, Context context, boolean isDebugMode, int publicKeyResourceDescriptor) {
+        this(deploymentKey, context, isDebugMode);
+
+        mPublicKey = getPublicKeyByResourceDescriptor(publicKeyResourceDescriptor);
+    }
+
+    public CodePush(String deploymentKey, Context context, boolean isDebugMode, @NonNull String serverUrl, Integer publicKeyResourceDescriptor) {
+        this(deploymentKey, context, isDebugMode);
+
+        if (publicKeyResourceDescriptor != null) {
+            mPublicKey = getPublicKeyByResourceDescriptor(publicKeyResourceDescriptor);
+        }
+
+        mServerUrl = serverUrl;
+    }
+
+    private String getPublicKeyByResourceDescriptor(int publicKeyResourceDescriptor){
+        String publicKey;
+        try {
+            publicKey = mContext.getString(publicKeyResourceDescriptor);
+        } catch (Resources.NotFoundException e) {
+            throw new CodePushInvalidPublicKeyException(
+                    "Unable to get public key, related resource descriptor " +
+                            publicKeyResourceDescriptor +
+                            " can not be found", e
+            );
+        }
+
+        if (publicKey.isEmpty()) {
+            throw new CodePushInvalidPublicKeyException("Specified public key is empty");
+        }
+        return publicKey;
     }
 
     public void clearDebugCacheIfNeeded() {
@@ -99,11 +142,17 @@ public class CodePush implements ReactPackage {
         return mAssetsBundleFileName;
     }
 
+    public String getPublicKey() {
+        return mPublicKey;
+    }
+
     long getBinaryResourcesModifiedTime() {
         try {
             String packageName = this.mContext.getPackageName();
             int codePushApkBuildTimeId = this.mContext.getResources().getIdentifier(CodePushConstants.CODE_PUSH_APK_BUILD_TIME_KEY, "string", packageName);
-            String codePushApkBuildTime = this.mContext.getResources().getString(codePushApkBuildTimeId);
+            // replace double quotes needed for correct restoration of long value from strings.xml
+            // https://github.com/Microsoft/cordova-plugin-code-push/issues/264
+            String codePushApkBuildTime = this.mContext.getResources().getString(codePushApkBuildTimeId).replaceAll("\"","");
             return Long.parseLong(codePushApkBuildTime);
         } catch (Exception e) {
             throw new CodePushUnknownException("Error in getting binary resources modified time", e);
@@ -182,7 +231,7 @@ public class CodePush implements ReactPackage {
         JSONObject pendingUpdate = mSettingsManager.getPendingUpdate();
         if (pendingUpdate != null) {
             JSONObject packageMetadata = this.mUpdateManager.getCurrentPackage();
-            if (!isPackageBundleLatest(packageMetadata) && hasBinaryVersionChanged(packageMetadata)) {
+            if (packageMetadata == null || !isPackageBundleLatest(packageMetadata) && hasBinaryVersionChanged(packageMetadata)) {
                 CodePushUtils.log("Skipping initializeUpdateAfterRestart(), binary version is newer");
                 return;
             }
@@ -270,6 +319,10 @@ public class CodePush implements ReactPackage {
         return sTestConfigurationFlag;
     }
 
+    public void setDeploymentKey(String deploymentKey) {
+        mDeploymentKey = deploymentKey;
+    }
+
     public static void setUsingTestConfiguration(boolean shouldUseTestConfiguration) {
         sTestConfigurationFlag = shouldUseTestConfiguration;
     }
@@ -300,6 +353,11 @@ public class CodePush implements ReactPackage {
         nativeModules.add(codePushModule);
         nativeModules.add(dialogModule);
         return nativeModules;
+    }
+
+    // Deprecated in RN v0.47.
+    public List<Class<? extends JavaScriptModule>> createJSModules() {
+        return new ArrayList<>();
     }
 
     @Override

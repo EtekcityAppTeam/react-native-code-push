@@ -412,11 +412,11 @@ public class CodePushNativeModule extends ReactContextBaseJavaModule {
                 }
 
                 if (installMode == CodePushInstallMode.ON_NEXT_RESUME.getValue() ||
-                        // We also add the resume listener if the installMode is IMMEDIATE, because
-                        // if the current activity is backgrounded, we want to reload the bundle when
-                        // it comes back into the foreground.
-                        installMode == CodePushInstallMode.IMMEDIATE.getValue() ||
-                        installMode == CodePushInstallMode.ON_NEXT_SUSPEND.getValue()) {
+                    // We also add the resume listener if the installMode is IMMEDIATE, because
+                    // if the current activity is backgrounded, we want to reload the bundle when
+                    // it comes back into the foreground.
+                    installMode == CodePushInstallMode.IMMEDIATE.getValue() ||
+                    installMode == CodePushInstallMode.ON_NEXT_SUSPEND.getValue()) {
 
                     // Store the minimum duration on the native module as an instance
                     // variable instead of relying on a closure below, so that any

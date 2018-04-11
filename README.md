@@ -6,6 +6,7 @@
 
 This plugin provides client-side integration for the [CodePush service](http://codepush.tools), allowing you to easily add a dynamic update experience to your React Native app(s).
 
+
 <!-- React Native Catalog -->
 
 * [How does it work?](#how-does-it-work)

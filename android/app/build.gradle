@@ -23,9 +23,23 @@ android {
     defaultConfig {
         consumerProguardFiles 'proguard-rules.pro'
     }
+    buildTypes {
+        release {
+
+        }
+
+        debug {
+
+        }
+
+
+        releaseStaging {
+
+        }
+    }
 }
 
 dependencies {
-    compile "com.facebook.react:react-native:+"
-    compile 'com.nimbusds:nimbus-jose-jwt:5.1'
+    api "com.facebook.react:react-native:+"
+    api 'com.nimbusds:nimbus-jose-jwt:5.1'
 }
